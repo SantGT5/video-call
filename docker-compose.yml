@@ -15,22 +15,24 @@ services:
       - .env
 
   mongo:
-    image: mongo:latest
+    build:
+      context: ./mongodb
+      dockerfile: Dockerfile
     restart: always
     networks:
       - todo-app
     volumes:
       - mongo-data:/data/db
-    command: mongod --quiet --logpath /dev/null
+      - ./mongodb/config/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh mongodb://mongo:27017 --quiet
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
+      interval: 5s
+      timeout: 5s
+      retries: 3
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: video-call
 
 networks:
   todo-app:

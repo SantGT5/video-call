@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  api:
+    container_name: api
+    restart: always
+    networks:
+      - todo-app
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+
+  mongo:
+    image: mongo:latest
+    restart: always
+    networks:
+      - todo-app
+    volumes:
+      - mongo-data:/data/db
+    command: mongod --quiet --logpath /dev/null
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongodb://mongo:27017 --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+
+networks:
+  todo-app:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local

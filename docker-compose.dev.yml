@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  api:
+    restart: always
+    networks:
+      - todo-app
+    volumes:
+      - /app/node_modules
+      - ./api:/app
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+
+  mongo:
+    image: mongo:latest
+    restart: always
+    networks:
+      - todo-app
+    volumes:
+      - mongo-data:/data/db
+    command: mongod --quiet --logpath /dev/null
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongodb://mongo:27017 --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: admin
+
+  mongo-express:
+    image: mongo-express:1.0.0-20-alpine3.18
+    restart: unless-stopped
+    networks:
+      - todo-app
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_SITE_BASEURL: /
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: true
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGODB_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGODB_PASSWORD}
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_PASSWORD}
+
+networks:
+  todo-app:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local

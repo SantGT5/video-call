@@ -5,12 +5,23 @@ services:
     container_name: api
     restart: always
     networks:
-      - todo-app
+      - video-call
+      - mailer
     build:
       context: ./api
       dockerfile: Dockerfile
     ports:
       - 8080:8080
+    env_file:
+      - .env
+
+  mailer:
+    restart: always
+    networks:
+      - mailer
+    build:
+      context: ./mailer
+      dockerfile: Dockerfile
     env_file:
       - .env
 
@@ -20,7 +31,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     networks:
-      - todo-app
+      - video-call
     volumes:
       - mongo-data:/data/db
       - ./mongodb/config/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
@@ -35,7 +46,9 @@ services:
       MONGO_INITDB_DATABASE: video-call
 
 networks:
-  todo-app:
+  video-call:
+    driver: bridge
+  mailer:
     driver: bridge
 
 volumes:

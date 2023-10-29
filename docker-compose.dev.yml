@@ -4,10 +4,11 @@ services:
   api:
     restart: always
     networks:
-      - todo-app
+      - video-call
+      - mailer
     volumes:
-      - /app/node_modules
       - ./api:/app
+      - /app/node_modules
     build:
       context: ./api
       dockerfile: Dockerfile.dev
@@ -19,13 +20,26 @@ services:
     env_file:
       - .env
 
+  mailer:
+    restart: always
+    networks:
+      - mailer
+    volumes:
+      - ./mailer:/app
+      - /app/node_modules
+    build:
+      context: ./mailer
+      dockerfile: Dockerfile.dev
+    env_file:
+      - .env
+
   mongo:
     build:
       context: ./mongodb
       dockerfile: Dockerfile
     restart: always
     networks:
-      - todo-app
+      - video-call
     volumes:
       - mongo-data:/data/db
       - ./mongodb/config/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
@@ -43,7 +57,7 @@ services:
     image: mongo-express:1.0.0-20-alpine3.18
     restart: unless-stopped
     networks:
-      - todo-app
+      - video-call
     depends_on:
       mongo:
         condition: service_healthy
@@ -60,7 +74,9 @@ services:
       ME_CONFIG_BASICAUTH_PASSWORD: ${ME_PASSWORD}
 
 networks:
-  todo-app:
+  video-call:
+    driver: bridge
+  mailer:
     driver: bridge
 
 volumes:

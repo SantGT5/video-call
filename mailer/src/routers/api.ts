@@ -1,10 +1,10 @@
 import type { Router } from 'express';
 import express from 'express';
 
-import { authRouter } from './Auth';
+import { mailerRouter } from './Mailer';
 
 const api: Router = express.Router();
 
-api.use('/auth', authRouter);
+api.use('/mailer', mailerRouter);
 
 export { api };

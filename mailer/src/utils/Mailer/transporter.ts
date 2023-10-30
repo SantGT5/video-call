@@ -5,14 +5,10 @@ import nodemailer from 'nodemailer';
 
 dotenv.config();
 
-const transporterHandler = ({
-  userEmail,
-  emailBody,
-  subject,
-}: emailConfigType) => {
-  const { EMAIL_USERNAME, EMAIL_PASSWORD } = process.env;
+const { EMAIL_USERNAME, EMAIL_PASSWORD, MAILER_NODE_ENV } = process.env;
 
-  const transporter = nodemailer.createTransport({
+const TRANSPORT_OPTIONS = {
+  production: {
     service: 'gmail',
     host: 'smtp.gmail.com',
     secure: true,
@@ -20,7 +16,23 @@ const transporterHandler = ({
       user: EMAIL_USERNAME,
       pass: EMAIL_PASSWORD,
     },
-  });
+  },
+  development: {
+    host: 'smtp.ethereal.email',
+    port: 587,
+    auth: {
+      user: EMAIL_USERNAME,
+      pass: EMAIL_PASSWORD,
+    },
+  },
+}[(MAILER_NODE_ENV as string) || 'development'];
+
+const transporterHandler = ({
+  userEmail,
+  emailBody,
+  subject,
+}: emailConfigType) => {
+  const transporter = nodemailer.createTransport(TRANSPORT_OPTIONS);
 
   const mailOptions = {
     from: EMAIL_USERNAME,
